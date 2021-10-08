@@ -13,8 +13,8 @@ type User struct {
 }
 
 type PaginatedUsers struct {
-	PageNumber int `json:"pageNumber"`
-	TotalPages int `json:"totalPages"`
+	//PageNumber int `json:"pageNumber"`
+	//TotalPages int `json:"totalPages"`
 	Users	 []User `json:"Users"`
 }
 
@@ -25,7 +25,10 @@ var users = []User {
 }
 
 var paginatedUsers = [] PaginatedUsers {
-	{PageNumber: 1, TotalPages: 1, Users: users},
+	{
+	//PageNumber: 1, TotalPages: 1,
+		Users: users,
+	},
 }
 
 func getUsers(c *gin.Context) {
@@ -63,4 +66,15 @@ func getPostsOfAParticularUser(c *gin.Context) {
 	} else {
 		c.IndentedJSON(http.StatusOK, accumulatedPostsOfAParticularUser)
 	}
+}
+
+func postUser(c *gin.Context) {
+	var newUser User
+
+	if err := c.BindJSON(&newUser); err != nil {
+		return
+	}
+
+	users = append(users, newUser)
+	c.IndentedJSON(http.StatusCreated, newUser)
 }
