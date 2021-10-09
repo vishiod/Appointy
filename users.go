@@ -106,7 +106,7 @@ func getUserByIDMongo(c *gin.Context)  {
 	// Get a handle for your collection
 	collection := appDB.Collection("users")
 
-	filterCursor, err := collection.Find(c, bson.M{"instaHandle": id})
+	filterCursor, err := collection.Find(c, bson.M{"id": id})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -177,7 +177,7 @@ func saveUserByMongo(c *gin.Context){
 		return
 	}
 
-	filterCursor, err = collection.Find(c, bson.M{"instaHandle": newUser.ID})
+	filterCursor, err = collection.Find(c, bson.M{"id": newUser.ID})
 
 	if err != nil {
 		log.Fatal(err)

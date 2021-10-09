@@ -95,7 +95,7 @@ func getPostByIDMongo(c *gin.Context)  {
 	collection := appDB.Collection("instaPosts")
 
 
-	filterCursor, err := collection.Find(c, bson.M{"PostID": id})
+	filterCursor, err := collection.Find(c, bson.M{"postid": id})
 	if err != nil {
 		log.Fatal(err)
 		return
