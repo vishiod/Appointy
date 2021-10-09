@@ -179,11 +179,22 @@ func postUserByMongo(c *gin.Context){
 	if err := c.BindJSON(&newUser); err != nil {
 		return
 	}
-
 	//users = append(users, newUser)
 	appDB := getDBStore().db
 	// Get a handle for your collection
 	collection := appDB.Collection("users")
+
+	filterCursor, err := collection.Find(c, bson.M{"email": newUser.Email})
+
+	if filterCursor.RemainingBatchLength() != 0{
+		c.IndentedJSON(http.StatusBadRequest, "Email Already Exists")
+		return
+	}
+
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
 
 	var tempPassword = newUser.Password
 
