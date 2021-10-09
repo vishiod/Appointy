@@ -131,7 +131,7 @@ func getPostsOfAParticularUserByMongo(c *gin.Context) {
 	// Get a handle for your collection
 	collection := appDB.Collection("instaPosts")
 
-	filterCursor, err := collection.Find(c, bson.M{"UserID": id})
+	filterCursor, err := collection.Find(c, bson.M{"userid": id})
 	if err != nil {
 		log.Fatal(err)
 		return
