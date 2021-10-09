@@ -6,12 +6,6 @@ import (
 	"instamongo/utils"
 )
 
-type Trainer struct {
-	Name string
-	Age  int
-	City string
-}
-
 
 func main() {
 	fmt.Println("Vishal")
@@ -23,29 +17,30 @@ func main() {
 	router.GET("/posts/:id", getPostByIDMongo)
 	router.GET("/posts/users/:id", getPostsOfAParticularUserByMongo)
 
-	router.POST("/users", postUser)
-	router.POST("/posts", postAnInstaPost)
+	router.POST("/users", postUserByMongo)
+	router.POST("/posts", postAnInstaPostByMongo)
 
-	println(utils.IsValidEmail("yogeshsharma@locus.sh"))
-	println(utils.IsValidEmail("yogesh-sharma@locus.sh"))
-	checkSecrecy()
+	//println(utils.IsValidEmail("yogeshsharma@locus.sh"))
+	//println(utils.IsValidEmail("yogesh-sharma@locus.sh"))
+
 	router.Run("localhost:8080")
 }
 
-func checkSecrecy() {
+func checkSecrecy(pass string) string {
 
-	preBuiltString := "His money is twice tainted: 'taint yours and 'taint mine."
-	preBuilt := utils.ComputeHmac256(preBuiltString)
+	//preBuiltString := "His money is twice tainted: 'taint yours and 'taint mine."
+	preBuilt := utils.ComputeHmac256(pass)
 
 	halfAString := "His money is twice tainted:"
 	adJoinedString1 := halfAString + " 'taint yours and 'taint mine."
 	adJoinedString2 := halfAString + " 'taint yours and 'taint mine. "
 
 	adJoinedToBuild := utils.ComputeHmac256(adJoinedString1)
-	println("Are we equal?:", utils.IsHMACEqual(preBuilt, adJoinedToBuild),
+	fmt.Println("Are we equal?:", utils.IsHMACEqual(preBuilt, adJoinedToBuild),
 		"<------>" + "then use my code to save in DB:", utils.HMACToString(preBuilt))
 
-	println("Is with space equal?:", utils.IsHMACEqual(preBuilt, utils.ComputeHmac256(adJoinedString2)))
+	fmt.Println("Is with space equal?:", utils.IsHMACEqual(preBuilt, utils.ComputeHmac256(adJoinedString2)))
 
+	return  utils.HMACToString(preBuilt)
 }
 

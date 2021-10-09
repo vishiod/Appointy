@@ -7,6 +7,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"instamongo/utils"
 	"log"
 	"net/http"
 )
@@ -37,53 +38,53 @@ var paginatedUsers = [] PaginatedUsers {
 	},
 }
 
-func getUsers(c *gin.Context) {
-	c.IndentedJSON(http.StatusOK, users)
-}
-
-func getUserByID(c *gin.Context) {
-	id := c.Param("id")
-
-	for _, page := range paginatedUsers {
-		for _, user := range page.Users {
-			if user.ID == id{
-				c.IndentedJSON(http.StatusOK, user)
-			}
-		}
-	}
-}
-
-func getPostsOfAParticularUser(c *gin.Context) {
-
-	id := c.Param("id")
-	var accumulatedPostsOfAParticularUser []Post
-	var relevantPostsPresent = false
-
-	for _, aPaginatedPost := range paginatedPosts {
-		for _, aPost := range aPaginatedPost.Posts {
-			if aPost.UserID == id {
-				accumulatedPostsOfAParticularUser = append(accumulatedPostsOfAParticularUser, aPost)
-				relevantPostsPresent = true
-			}
-		}
-	}
-	if !relevantPostsPresent {
-		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "Post not found"})
-	} else {
-		c.IndentedJSON(http.StatusOK, accumulatedPostsOfAParticularUser)
-	}
-}
-
-func postUser(c *gin.Context) {
-	var newUser User
-
-	if err := c.BindJSON(&newUser); err != nil {
-		return
-	}
-
-	users = append(users, newUser)
-	c.IndentedJSON(http.StatusCreated, newUser)
-}
+//func getUsers(c *gin.Context) {
+//	c.IndentedJSON(http.StatusOK, users)
+//}
+//
+//func getUserByID(c *gin.Context) {
+//	id := c.Param("id")
+//
+//	for _, page := range paginatedUsers {
+//		for _, user := range page.Users {
+//			if user.ID == id{
+//				c.IndentedJSON(http.StatusOK, user)
+//			}
+//		}
+//	}
+//}
+//
+//func getPostsOfAParticularUser(c *gin.Context) {
+//
+//	id := c.Param("id")
+//	var accumulatedPostsOfAParticularUser []Post
+//	var relevantPostsPresent = false
+//
+//	for _, aPaginatedPost := range paginatedPosts {
+//		for _, aPost := range aPaginatedPost.Posts {
+//			if aPost.UserID == id {
+//				accumulatedPostsOfAParticularUser = append(accumulatedPostsOfAParticularUser, aPost)
+//				relevantPostsPresent = true
+//			}
+//		}
+//	}
+//	if !relevantPostsPresent {
+//		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "Post not found"})
+//	} else {
+//		c.IndentedJSON(http.StatusOK, accumulatedPostsOfAParticularUser)
+//	}
+//}
+//
+//func postUser(c *gin.Context) {
+//	var newUser User
+//
+//	if err := c.BindJSON(&newUser); err != nil {
+//		return
+//	}
+//
+//	users = append(users, newUser)
+//	c.IndentedJSON(http.StatusCreated, newUser)
+//}
 
 func getUsersMongo(c *gin.Context){
 	var  mongoUsers []*User
@@ -217,4 +218,48 @@ func getPostsOfAParticularUserByMongo(c *gin.Context) {
 	fmt.Println("Found document (array): ", postsFiltered)
 
 	c.IndentedJSON(http.StatusOK, postsFiltered)
+}
+
+func postUserByMongo(c *gin.Context){
+	var newUser User
+
+	if err := c.BindJSON(&newUser); err != nil {
+		return
+	}
+
+	//users = append(users, newUser)
+	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
+
+	// Connect to MongoDB
+	client, err := mongo.Connect(context.TODO(), clientOptions)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Check the connection
+	err = client.Ping(context.TODO(), nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println("Connected to MongoDB!")
+
+	// Get a handle for your collection
+	collection := client.Database("mydb").Collection("users")
+
+	var tempPassword string = newUser.Password
+
+	newUser.Password = checkSecrecy(tempPassword)
+
+	if  utils.IsValidEmail(newUser.Email) {
+		insertResult, err := collection.InsertOne(context.TODO(), newUser)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println("Inserted a single document: ", insertResult.InsertedID)
+		c.IndentedJSON(http.StatusCreated, newUser)
+	}else{
+		c.IndentedJSON(http.StatusBadRequest, "Invalid Email")
+	}
+
 }

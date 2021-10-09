@@ -41,36 +41,36 @@ var paginatedPosts = [] PaginatedPosts {
 	},
 }
 
-func getPosts(c *gin.Context) {
-	c.IndentedJSON(http.StatusOK, paginatedPosts)
-}
-
-func getPostByID(c *gin.Context) {
-	id := c.Param("id")
-
-	// Loop over the list of albums, looking for
-	// an album whose ID value matches the parameter.
-	for _, paginatedPost := range paginatedPosts {
-		for _, aPost := range paginatedPost.Posts {
-			if aPost.PostID == id {
-				c.IndentedJSON(http.StatusOK, aPost)
-				return
-			}
-		}
-	}
-	c.IndentedJSON(http.StatusNotFound, gin.H{"message": "Post not found"})
-}
-
-func postAnInstaPost(c *gin.Context) {
-	var newInstaPost Post
-
-	if err := c.BindJSON(&newInstaPost); err != nil {
-		return
-	}
-
-	posts = append(posts, newInstaPost)
-	c.IndentedJSON(http.StatusCreated, newInstaPost)
-}
+//func getPosts(c *gin.Context) {
+//	c.IndentedJSON(http.StatusOK, paginatedPosts)
+//}
+//
+//func getPostByID(c *gin.Context) {
+//	id := c.Param("id")
+//
+//	// Loop over the list of albums, looking for
+//	// an album whose ID value matches the parameter.
+//	for _, paginatedPost := range paginatedPosts {
+//		for _, aPost := range paginatedPost.Posts {
+//			if aPost.PostID == id {
+//				c.IndentedJSON(http.StatusOK, aPost)
+//				return
+//			}
+//		}
+//	}
+//	c.IndentedJSON(http.StatusNotFound, gin.H{"message": "Post not found"})
+//}
+//
+//func postAnInstaPost(c *gin.Context) {
+//	var newInstaPost Post
+//
+//	if err := c.BindJSON(&newInstaPost); err != nil {
+//		return
+//	}
+//
+//	posts = append(posts, newInstaPost)
+//	c.IndentedJSON(http.StatusCreated, newInstaPost)
+//}
 
 func getPostsMongo(c *gin.Context){
 	var  mongoPosts []*Post
@@ -124,6 +124,10 @@ func getPostsMongo(c *gin.Context){
 	cur.Close(context.TODO())
 
 	c.IndentedJSON(http.StatusOK, &mongoPosts)
+
+	if err != nil {
+		panic(err)
+	}
 }
 
 func getPostByIDMongo(c *gin.Context)  {
@@ -167,3 +171,40 @@ func getPostByIDMongo(c *gin.Context)  {
 	c.IndentedJSON(http.StatusOK, postsFiltered)
 
 }
+
+func postAnInstaPostByMongo(c *gin.Context){
+	var newPost Post
+
+	if err := c.BindJSON(&newPost); err != nil {
+		return
+	}
+
+	//users = append(users, newUser)
+	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
+
+	// Connect to MongoDB
+	client, err := mongo.Connect(context.TODO(), clientOptions)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Check the connection
+	err = client.Ping(context.TODO(), nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println("Connected to MongoDB!")
+
+	// Get a handle for your collection
+	collection := client.Database("mydb").Collection("instaPosts")
+
+	insertResult, err := collection.InsertOne(context.TODO(), newPost)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("Inserted a single document: ", insertResult.InsertedID)
+
+	c.IndentedJSON(http.StatusCreated, newPost)
+}
+
