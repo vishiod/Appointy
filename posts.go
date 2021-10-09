@@ -1,7 +1,13 @@
 package main
 
 import (
+	"context"
+	"fmt"
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"log"
 	"net/http"
 	"time"
 )
@@ -64,4 +70,100 @@ func postAnInstaPost(c *gin.Context) {
 
 	posts = append(posts, newInstaPost)
 	c.IndentedJSON(http.StatusCreated, newInstaPost)
+}
+
+func getPostsMongo(c *gin.Context){
+	var  mongoPosts []*Post
+
+	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
+
+	// Connect to MongoDB
+	client, err := mongo.Connect(context.TODO(), clientOptions)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Check the connection
+	err = client.Ping(context.TODO(), nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println("Connected to MongoDB!")
+
+	// Get a handle for your collection
+	collection := client.Database("mydb").Collection("instaPosts")
+
+	findOptions := options.Find()
+
+	cur, err := collection.Find(context.TODO(), bson.D{{}}, findOptions)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Iterate through the cursor
+	for cur.Next(context.TODO()) {
+		var elem Post
+		err := cur.Decode(&elem)
+
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		mongoPosts = append(mongoPosts, &elem)
+	}
+
+	if err := cur.Err(); err != nil {
+		log.Fatal(err)
+	}
+
+	// Close the cursor once finished
+	fmt.Println("Found multiple documents (array): ", mongoPosts)
+
+	cur.Close(context.TODO())
+
+	c.IndentedJSON(http.StatusOK, &mongoPosts)
+}
+
+func getPostByIDMongo(c *gin.Context)  {
+	id := c.Param("id")
+
+
+	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
+
+	// Connect to MongoDB
+	client, err := mongo.Connect(context.TODO(), clientOptions)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Check the connection
+	err = client.Ping(context.TODO(), nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println("Connected to MongoDB!")
+
+	// Get a handle for your collection
+	collection := client.Database("mydb").Collection("instaPosts")
+
+	filterCursor, err := collection.Find(c, bson.M{"PostID": id})
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+
+	var postsFiltered []bson.M
+	if err = filterCursor.All(c, &postsFiltered); err != nil {
+		log.Fatal(err)
+		return
+	}
+
+	fmt.Println(postsFiltered)
+	fmt.Println("Found document (array): ", postsFiltered)
+
+	c.IndentedJSON(http.StatusOK, postsFiltered)
+
 }

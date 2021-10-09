@@ -17,11 +17,11 @@ func main() {
 	fmt.Println("Vishal")
 
 	router := gin.Default()
-	router.GET("/user", getUsers)
-	router.GET("/users/:id", getUserByID)
-	router.GET("/post", getPosts)
-	router.GET("/posts/:id", getPostByID)
-	router.GET("/posts/users/:id", getPostsOfAParticularUser)
+	router.GET("/user", getUsersMongo)
+	router.GET("/users/:id", getUserByIDMongo)
+	router.GET("/post", getPostsMongo)
+	router.GET("/posts/:id", getPostByIDMongo)
+	router.GET("/posts/users/:id", getPostsOfAParticularUserByMongo)
 
 	router.POST("/users", postUser)
 	router.POST("/posts", postAnInstaPost)
@@ -48,3 +48,4 @@ func checkSecrecy() {
 	println("Is with space equal?:", utils.IsHMACEqual(preBuilt, utils.ComputeHmac256(adJoinedString2)))
 
 }
+

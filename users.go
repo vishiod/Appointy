@@ -1,7 +1,13 @@
 package main
 
 import (
+	"context"
+	"fmt"
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"log"
 	"net/http"
 )
 
@@ -77,4 +83,138 @@ func postUser(c *gin.Context) {
 
 	users = append(users, newUser)
 	c.IndentedJSON(http.StatusCreated, newUser)
+}
+
+func getUsersMongo(c *gin.Context){
+	var  mongoUsers []*User
+
+	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
+
+	// Connect to MongoDB
+	client, err := mongo.Connect(context.TODO(), clientOptions)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Check the connection
+	err = client.Ping(context.TODO(), nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println("Connected to MongoDB!")
+
+	// Get a handle for your collection
+	collection := client.Database("mydb").Collection("users")
+
+	findOptions := options.Find()
+
+	cur, err := collection.Find(context.TODO(), bson.D{{}}, findOptions)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Iterate through the cursor
+	for cur.Next(context.TODO()) {
+		var elem User
+		err := cur.Decode(&elem)
+
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		mongoUsers = append(mongoUsers, &elem)
+	}
+
+	if err := cur.Err(); err != nil {
+		log.Fatal(err)
+	}
+
+	// Close the cursor once finished
+	fmt.Println("Found multiple documents (array): ", mongoUsers)
+
+	cur.Close(context.TODO())
+
+	c.IndentedJSON(http.StatusOK, &mongoUsers)
+}
+
+func getUserByIDMongo(c *gin.Context)  {
+	id := c.Param("id")
+
+
+	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
+
+	// Connect to MongoDB
+	client, err := mongo.Connect(context.TODO(), clientOptions)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Check the connection
+	err = client.Ping(context.TODO(), nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println("Connected to MongoDB!")
+
+	// Get a handle for your collection
+	collection := client.Database("mydb").Collection("users")
+
+	filterCursor, err := collection.Find(c, bson.M{"instaHandle": id})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var usersFiltered []bson.M
+	if err = filterCursor.All(c, &usersFiltered); err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(usersFiltered)
+	fmt.Println("Found document (array): ", usersFiltered)
+
+	c.IndentedJSON(http.StatusOK, usersFiltered)
+
+}
+
+func getPostsOfAParticularUserByMongo(c *gin.Context) {
+
+	id := c.Param("id")
+
+	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
+
+	// Connect to MongoDB
+	client, err := mongo.Connect(context.TODO(), clientOptions)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Check the connection
+	err = client.Ping(context.TODO(), nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println("Connected to MongoDB!")
+
+	// Get a handle for your collection
+	collection := client.Database("mydb").Collection("instaPosts")
+
+	filterCursor, err := collection.Find(c, bson.M{"UserID": id})
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+
+	var postsFiltered []bson.M
+	if err = filterCursor.All(c, &postsFiltered); err != nil {
+		log.Fatal(err)
+		return
+	}
+
+	fmt.Println(postsFiltered)
+	fmt.Println("Found document (array): ", postsFiltered)
+
+	c.IndentedJSON(http.StatusOK, postsFiltered)
 }
