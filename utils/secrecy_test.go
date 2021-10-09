@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"github.com/mongo-go-examples/testutils"
+	"../testutils"
 	"log"
 	"testing"
 )
