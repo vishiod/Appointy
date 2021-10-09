@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"instamongo/utils"
 	"log"
@@ -89,24 +88,9 @@ var paginatedUsers = [] PaginatedUsers {
 func getUsersMongo(c *gin.Context){
 	var  mongoUsers []*User
 
-	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
-
-	// Connect to MongoDB
-	client, err := mongo.Connect(context.TODO(), clientOptions)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Check the connection
-	err = client.Ping(context.TODO(), nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Println("Connected to MongoDB!")
-
+	appDB := getDBStore().db
 	// Get a handle for your collection
-	collection := client.Database("mydb").Collection("users")
+	collection := appDB.Collection("users")
 
 	findOptions := options.Find()
 
@@ -143,25 +127,9 @@ func getUsersMongo(c *gin.Context){
 func getUserByIDMongo(c *gin.Context)  {
 	id := c.Param("id")
 
-
-	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
-
-	// Connect to MongoDB
-	client, err := mongo.Connect(context.TODO(), clientOptions)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Check the connection
-	err = client.Ping(context.TODO(), nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Println("Connected to MongoDB!")
-
+	appDB := getDBStore().db
 	// Get a handle for your collection
-	collection := client.Database("mydb").Collection("users")
+	collection := appDB.Collection("users")
 
 	filterCursor, err := collection.Find(c, bson.M{"instaHandle": id})
 	if err != nil {
@@ -183,24 +151,9 @@ func getPostsOfAParticularUserByMongo(c *gin.Context) {
 
 	id := c.Param("id")
 
-	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
-
-	// Connect to MongoDB
-	client, err := mongo.Connect(context.TODO(), clientOptions)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Check the connection
-	err = client.Ping(context.TODO(), nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Println("Connected to MongoDB!")
-
+	appDB := getDBStore().db
 	// Get a handle for your collection
-	collection := client.Database("mydb").Collection("instaPosts")
+	collection := appDB.Collection("instaPosts")
 
 	filterCursor, err := collection.Find(c, bson.M{"UserID": id})
 	if err != nil {
@@ -228,24 +181,9 @@ func postUserByMongo(c *gin.Context){
 	}
 
 	//users = append(users, newUser)
-	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
-
-	// Connect to MongoDB
-	client, err := mongo.Connect(context.TODO(), clientOptions)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Check the connection
-	err = client.Ping(context.TODO(), nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Println("Connected to MongoDB!")
-
+	appDB := getDBStore().db
 	// Get a handle for your collection
-	collection := client.Database("mydb").Collection("users")
+	collection := appDB.Collection("users")
 
 	var tempPassword = newUser.Password
 

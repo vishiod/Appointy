@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
 	"net/http"
@@ -120,25 +119,10 @@ func getPostsMongo(c *gin.Context){
 func getPostByIDMongo(c *gin.Context)  {
 	id := c.Param("id")
 
-
-	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
-
-	// Connect to MongoDB
-	client, err := mongo.Connect(context.TODO(), clientOptions)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Check the connection
-	err = client.Ping(context.TODO(), nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Println("Connected to MongoDB!")
-
+	appDB := getDBStore().db
 	// Get a handle for your collection
-	collection := client.Database("mydb").Collection("instaPosts")
+	collection := appDB.Collection("instaPosts")
+
 
 	filterCursor, err := collection.Find(c, bson.M{"PostID": id})
 	if err != nil {
@@ -165,7 +149,7 @@ func postAnInstaPostByMongo(c *gin.Context){
 	if err := c.BindJSON(&newPost); err != nil {
 		return
 	}
-
+	newPost.TimeStamp = time.Now().String()
 	appDB := getDBStore().db
 	// Get a handle for your collection
 	collection := appDB.Collection("instaPosts")
