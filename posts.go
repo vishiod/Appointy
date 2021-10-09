@@ -27,7 +27,7 @@ type PaginatedPosts struct {
 	Posts	[]Post `json:"Posts"`
 }
 
-var posts = []Post{
+var posts = []Post {
 	{ PostID: "1", UserID: "1", Caption: "Hello Brother", URL: "Thor", TimeStamp: time.Now().String()},
 	{ PostID: "2", UserID: "1", Caption: "Hello Mother", URL: "Brother", TimeStamp: time.Now().String()},
 	{ PostID: "3", UserID: "2", Caption: "Hello Sister", URL: "Hello", TimeStamp: time.Now().String()},
@@ -75,24 +75,11 @@ var paginatedPosts = [] PaginatedPosts {
 func getPostsMongo(c *gin.Context){
 	var  mongoPosts []*Post
 
-	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
-
-	// Connect to MongoDB
-	client, err := mongo.Connect(context.TODO(), clientOptions)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Check the connection
-	err = client.Ping(context.TODO(), nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-
+	appDB := getDBStore().db
 	fmt.Println("Connected to MongoDB!")
 
 	// Get a handle for your collection
-	collection := client.Database("mydb").Collection("instaPosts")
+	collection := appDB.Collection("instaPosts")
 
 	findOptions := options.Find()
 
@@ -179,27 +166,9 @@ func postAnInstaPostByMongo(c *gin.Context){
 		return
 	}
 
-	//users = append(users, newUser)
-	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
-
-	// Connect to MongoDB
-	client, err := mongo.Connect(context.TODO(), clientOptions)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	newPost.TimeStamp = time.Now().String()
-
-	// Check the connection
-	err = client.Ping(context.TODO(), nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Println("Connected to MongoDB!")
-
+	appDB := getDBStore().db
 	// Get a handle for your collection
-	collection := client.Database("mydb").Collection("instaPosts")
+	collection := appDB.Collection("instaPosts")
 
 	insertResult, err := collection.InsertOne(context.TODO(), newPost)
 	if err != nil {
