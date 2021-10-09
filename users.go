@@ -247,7 +247,7 @@ func postUserByMongo(c *gin.Context){
 	// Get a handle for your collection
 	collection := client.Database("mydb").Collection("users")
 
-	var tempPassword string = newUser.Password
+	var tempPassword = newUser.Password
 
 	newUser.Password = checkSecrecy(tempPassword)
 

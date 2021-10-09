@@ -11,6 +11,7 @@ func main() {
 	fmt.Println("Vishal")
 
 	router := gin.Default()
+
 	router.GET("/user", getUsersMongo)
 	router.GET("/users/:id", getUserByIDMongo)
 	router.GET("/post", getPostsMongo)
@@ -20,10 +21,11 @@ func main() {
 	router.POST("/users", postUserByMongo)
 	router.POST("/posts", postAnInstaPostByMongo)
 
-	//println(utils.IsValidEmail("yogeshsharma@locus.sh"))
-	//println(utils.IsValidEmail("yogesh-sharma@locus.sh"))
+	err := router.Run("localhost:8080")
 
-	router.Run("localhost:8080")
+	if err != nil {
+		return 
+	}
 }
 
 func checkSecrecy(pass string) string {

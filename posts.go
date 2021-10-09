@@ -188,6 +188,8 @@ func postAnInstaPostByMongo(c *gin.Context){
 		log.Fatal(err)
 	}
 
+	newPost.TimeStamp = time.Now().String()
+
 	// Check the connection
 	err = client.Ping(context.TODO(), nil)
 	if err != nil {
