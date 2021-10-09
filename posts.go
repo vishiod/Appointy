@@ -154,6 +154,13 @@ func postAnInstaPostByMongo(c *gin.Context){
 	// Get a handle for your collection
 	collection := appDB.Collection("instaPosts")
 
+	filterCursor, err := collection.Find(c, bson.M{"postId": newPost.PostID})
+
+	if filterCursor.RemainingBatchLength() != 0{
+		c.IndentedJSON(http.StatusBadRequest, "ID Already Exists")
+		return
+	}
+
 	insertResult, err := collection.InsertOne(context.TODO(), newPost)
 	if err != nil {
 		log.Fatal(err)

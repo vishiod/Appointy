@@ -191,6 +191,13 @@ func postUserByMongo(c *gin.Context){
 		return
 	}
 
+	filterCursor, err = collection.Find(c, bson.M{"instaHandle": newUser.ID})
+
+	if filterCursor.RemainingBatchLength() != 0{
+		c.IndentedJSON(http.StatusBadRequest, "ID Already Exists")
+		return
+	}
+
 	if err != nil {
 		log.Fatal(err)
 		return
