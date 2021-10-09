@@ -6,36 +6,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"instamongo/dbutils"
 	"instamongo/utils"
 	"log"
 	"net/http"
 )
-
-type User struct {
-	ID       string `json:"instaHandle"`
-	Name     string `json:"name"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
-}
-
-type PaginatedUsers struct {
-	//PageNumber int `json:"pageNumber"`
-	//TotalPages int `json:"totalPages"`
-	Users	 []User `json:"Users"`
-}
-
-var users = []User {
-	{ID: "1", Name: "Ash",   Email: "vs@gmail.com", Password: "111"},
-	{ID: "2", Name: "Misty", Email: "ys@gmail.com", Password: "111"},
-	{ID: "3", Name: "Brock", Email: "ss@gmail.com", Password: "111"},
-}
-
-var paginatedUsers = [] PaginatedUsers {
-	{
-	//PageNumber: 1, TotalPages: 1,
-		Users: users,
-	},
-}
 
 //func getUsers(c *gin.Context) {
 //	c.IndentedJSON(http.StatusOK, users)
@@ -88,7 +63,7 @@ var paginatedUsers = [] PaginatedUsers {
 func getUsersMongo(c *gin.Context){
 	var  mongoUsers []*User
 
-	appDB := getDBStore().db
+	appDB := dbutils.GetDBStore().DB
 	// Get a handle for your collection
 	collection := appDB.Collection("users")
 
@@ -127,7 +102,7 @@ func getUsersMongo(c *gin.Context){
 func getUserByIDMongo(c *gin.Context)  {
 	id := c.Param("id")
 
-	appDB := getDBStore().db
+	appDB := dbutils.GetDBStore().DB
 	// Get a handle for your collection
 	collection := appDB.Collection("users")
 
@@ -149,9 +124,10 @@ func getUserByIDMongo(c *gin.Context)  {
 
 func getPostsOfAParticularUserByMongo(c *gin.Context) {
 
+	var  mongoPosts []*Post
 	id := c.Param("id")
 
-	appDB := getDBStore().db
+	appDB := dbutils.GetDBStore().DB
 	// Get a handle for your collection
 	collection := appDB.Collection("instaPosts")
 
@@ -161,26 +137,32 @@ func getPostsOfAParticularUserByMongo(c *gin.Context) {
 		return
 	}
 
-	var postsFiltered []bson.M
-	if err = filterCursor.All(c, &postsFiltered); err != nil {
-		log.Fatal(err)
-		return
+	for filterCursor.Next(context.TODO()) {
+		var elem Post
+		err := filterCursor.Decode(&elem)
+
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		mongoPosts = append(mongoPosts, &elem)
 	}
 
-	fmt.Println(postsFiltered)
-	fmt.Println("Found document (array): ", postsFiltered)
+	fmt.Println("Found document (array): ", mongoPosts)
 
-	c.IndentedJSON(http.StatusOK, postsFiltered)
+	c.IndentedJSON(http.StatusOK, mongoPosts)
 }
 
-func postUserByMongo(c *gin.Context){
+func saveUserByMongo(c *gin.Context){
+
 	var newUser User
 
 	if err := c.BindJSON(&newUser); err != nil {
 		return
 	}
 	//users = append(users, newUser)
-	appDB := getDBStore().db
+	appDB := dbutils.GetDBStore().DB
 	// Get a handle for your collection
 	collection := appDB.Collection("users")
 
@@ -197,15 +179,12 @@ func postUserByMongo(c *gin.Context){
 
 	filterCursor, err = collection.Find(c, bson.M{"instaHandle": newUser.ID})
 
-
 	if err != nil {
 		log.Fatal(err)
 		return
 	}
 
-	var tempPassword = newUser.Password
-
-	newUser.Password = checkSecrecy(tempPassword)
+	newUser.Password = utils.HMACToString(utils.ComputeHmac256(newUser.Password))
 
 	if  utils.IsValidEmail(newUser.Email) {
 		insertResult, err := collection.InsertOne(context.TODO(), newUser)
@@ -214,7 +193,7 @@ func postUserByMongo(c *gin.Context){
 		}
 		fmt.Println("Inserted a single document: ", insertResult.InsertedID)
 		c.IndentedJSON(http.StatusCreated, newUser)
-	}else{
+	} else {
 		c.IndentedJSON(http.StatusBadRequest, "Invalid Email")
 	}
 

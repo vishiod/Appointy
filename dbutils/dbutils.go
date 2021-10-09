@@ -1,4 +1,4 @@
-package main
+package dbutils
 
 import (
 	"context"
@@ -7,18 +7,16 @@ import (
 	"log"
 )
 
-const CONNECTED = "Successfully connected to database: %v"
-
 type MongoDatastore struct {
-	db      *mongo.Database
+	DB      *mongo.Database
 	Session *mongo.Client
 }
 
 var mongoStore MongoDatastore = MongoDatastore{nil, nil}
 
-func getDBStore() MongoDatastore {
+func GetDBStore() MongoDatastore {
 
-	if mongoStore.db == nil {
+	if mongoStore.DB == nil {
 		mongoStore = createDBStore()
 	}
 	return mongoStore
@@ -42,7 +40,7 @@ func createDBStore() MongoDatastore {
 	appDB := client.Database("mydb")
 
 	var mongoDBStore MongoDatastore
-	mongoDBStore.db = appDB
+	mongoDBStore.DB = appDB
 	mongoDBStore.Session = appDB.Client()
 	return mongoDBStore
 }

@@ -6,39 +6,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"instamongo/dbutils"
 	"log"
 	"net/http"
 	"time"
 )
-
-type Post struct {
-	UserID   string `json:"userId"`
-	PostID	 string `json:"postId"`
-	Caption	 string `json:"caption"`
-	URL 	 string `json:"url"`
-	//TimeStamp time.Time `json:"TimePosted"`
-	TimeStamp string `json:"TimePosted"`
-}
-
-type PaginatedPosts struct {
-	//PageNumber int `json:"pageNumber"`
-	//TotalPages int `json:"totalPages"`
-	Posts	[]Post `json:"Posts"`
-}
-
-var posts = []Post {
-	{ PostID: "1", UserID: "1", Caption: "Hello Brother", URL: "Thor", TimeStamp: time.Now().String()},
-	{ PostID: "2", UserID: "1", Caption: "Hello Mother", URL: "Brother", TimeStamp: time.Now().String()},
-	{ PostID: "3", UserID: "2", Caption: "Hello Sister", URL: "Hello", TimeStamp: time.Now().String()},
-	{ PostID: "4", UserID: "3", Caption: "Hello Myself", URL: "Bruh", TimeStamp: time.Now().String()},
-}
-
-var paginatedPosts = [] PaginatedPosts {
-	{
-		//PageNumber: 1, TotalPages: 1,
-		Posts: posts,
-	},
-}
 
 //func getPosts(c *gin.Context) {
 //	c.IndentedJSON(http.StatusOK, paginatedPosts)
@@ -74,8 +46,7 @@ var paginatedPosts = [] PaginatedPosts {
 func getPostsMongo(c *gin.Context){
 	var  mongoPosts []*Post
 
-	appDB := getDBStore().db
-	fmt.Println("Connected to MongoDB!")
+	appDB := dbutils.GetDBStore().DB
 
 	// Get a handle for your collection
 	collection := appDB.Collection("instaPosts")
@@ -119,7 +90,7 @@ func getPostsMongo(c *gin.Context){
 func getPostByIDMongo(c *gin.Context)  {
 	id := c.Param("id")
 
-	appDB := getDBStore().db
+	appDB := dbutils.GetDBStore().DB
 	// Get a handle for your collection
 	collection := appDB.Collection("instaPosts")
 
@@ -143,14 +114,14 @@ func getPostByIDMongo(c *gin.Context)  {
 
 }
 
-func postAnInstaPostByMongo(c *gin.Context){
+func saveAnInstaPostByMongo(c *gin.Context){
 	var newPost Post
 
 	if err := c.BindJSON(&newPost); err != nil {
 		return
 	}
 	newPost.TimeStamp = time.Now().String()
-	appDB := getDBStore().db
+	appDB := dbutils.GetDBStore().DB
 	// Get a handle for your collection
 	collection := appDB.Collection("instaPosts")
 

@@ -7,7 +7,7 @@ import (
 	"hash"
 )
 
-var secretKeyPerApplication = "o$cfyg.C5Tg5a05Llyv9qdC5&JGtQH&$"
+var secretKeyPerApplication = "o$cfyg.C5Tg5a05Llyv9qdC5&JGtQH&$" // TODO: Get this from env variable
 
 func ComputeHmac256(message string) hash.Hash {
 
